@@ -1,0 +1,23 @@
+# Windows temporary files
+*.tmp
+*.vbs
+*.log
+*.exe
+*.dll
+*.bak
+*.tmp
+
+# macOS temporary files
+.DS_Store
+
+# Linux temporary files
+*~
+
+# Python bytecode files
+__pycache__/
+
+# Python virtual environment
+.venv/
+
+# Python cache files
+.mypy_cache/
