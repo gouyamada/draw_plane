@@ -1,0 +1,106 @@
+# pylint: disable=too-many-arguments,too-many-positional-arguments,line-too-long,too-many-locals,too-many-statements
+"""
+平面を描画するスクリプト
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
+from mpl_toolkits.mplot3d import Axes3D  # 3Dプロット用に追加  # type: ignore
+# Ensure Axes3D is imported before creating a 3D subplot
+
+
+def interactive_plane_visualizer():
+    """
+    平面を描画する関数
+    この関数は、3D空間に平面と法線ベクトルを描画し、
+    スライダーを使用して平面の位置と法線ベクトルをインタラクティブに変更できるようにします。
+    """
+    # 初期値
+    init_x0, init_y0, init_z0 = 1, 2, 1
+    init_a, init_b, init_c = 2, -3, 1
+    fig = plt.figure(figsize=(10, 8))
+    # Ensure Axes3D is imported before creating a 3D subplot
+    ax = fig.add_subplot(111, projection='3d')  # 3Dプロットを明示的に指定
+    plt.subplots_adjust(left=0.25, bottom=0.35)
+
+    # メッシュグリッド
+    (xx, yy) = np.meshgrid(np.linspace(-5, 5, 10), np.linspace(-5, 5, 10))
+
+    def compute_plane(x0, y0, z0, a, b, c):
+        """
+        平面の方程式からZ座標を計算する関数
+        平面の方程式は Ax + By + Cz + d = 0 であり、
+        dは平面上の点(x0, y0, z0)を使って計算されます。
+        """
+        d = -(a * x0 + b * y0 + c * z0)
+        zz = (-a * xx - b * yy - d) / c
+        return zz
+
+    # 初期描画
+    zz = compute_plane(init_x0, init_y0, init_z0, init_a, init_b, init_c)
+    ax.plot_surface(xx, yy, zz, alpha=0.5, color='skyblue', edgecolor='gray')
+    quiver = ax.quiver(init_x0, init_y0, init_z0, init_a, init_b, init_c, length=2, color='red', linewidth=2)
+    point = ax.scatter(init_x0, init_y0, init_z0, color='black', s=50)  # 's' here is for marker size, not the slider
+
+    # 軸設定
+    ax.set_xlim((-5, 5))
+    ax.set_ylim((-5, 5))
+    ax.set_zlim((-5, 5))
+    ax.set_xlabel('X軸')
+    ax.set_ylabel('Y軸')
+    ax.set_zlabel('Z軸')
+    ax.set_title('平面と法線ベクトル（インタラクティブ）')
+
+    # スライダーの位置
+    axcolor = 'lightgoldenrodyellow'
+    ax_x0 = plt.axes((0.25, 0.25, 0.65, 0.03), facecolor=axcolor)
+    ax_y0 = plt.axes((0.25, 0.21, 0.65, 0.03), facecolor=axcolor)
+    ax_z0 = plt.axes((0.25, 0.17, 0.65, 0.03), facecolor=axcolor)
+    ax_a = plt.axes((0.25, 0.13, 0.65, 0.03), facecolor=axcolor)
+    ax_b = plt.axes((0.25, 0.09, 0.65, 0.03), facecolor=axcolor)
+    ax_c = plt.axes((0.25, 0.05, 0.65, 0.03), facecolor=axcolor)
+
+    # スライダーの定義
+    s_x0 = Slider(ax_x0, 'x0', -3.0, 3.0, valinit=init_x0)
+    s_y0 = Slider(ax_y0, 'y0', -3.0, 3.0, valinit=init_y0)
+    s_z0 = Slider(ax_z0, 'z0', -3.0, 3.0, valinit=init_z0)
+    s_a = Slider(ax_a, 'A', -5.0, 5.0, valinit=init_a)
+    s_b = Slider(ax_b, 'B', -5.0, 5.0, valinit=init_b)
+    s_c = Slider(ax_c, 'C', -5.0, 5.0, valinit=init_c)
+
+    def update():
+        """
+        スライダーの値が変更されたときに呼び出される関数
+        スライダーの値を取得し、平面と法線ベクトルを更新します。
+        """
+        nonlocal quiver, point
+        x0 = s_x0.val
+        y0 = s_y0.val
+        z0 = s_z0.val
+        a = s_a.val
+        b = s_b.val
+        c = s_c.val if s_c.val != 0 else 0.01  # ゼロ割対策
+
+        # Remove previous surface plot
+        for coll in ax.collections:
+            coll.remove()
+        quiver.remove()
+        point.remove()
+
+        zz = compute_plane(x0, y0, z0, a, b, c)
+        ax.plot_surface(xx, yy, zz, alpha=0.5, color='skyblue', edgecolor='gray')
+        quiver = ax.quiver(x0, y0, z0, a, b, c, length=2, color='red', linewidth=2)
+        point = ax.scatter(x0, y0, int(z0), color='black', s=50)
+        fig.canvas.draw_idle()
+
+    # スライダーイベント登録
+    for slider in [s_x0, s_y0, s_z0, s_a, s_b, s_c]:
+        slider.on_changed(lambda _: update())
+
+    # 表示
+    plt.show()
+
+
+# エントリーポイント
+if __name__ == "__main__":
+    interactive_plane_visualizer()
